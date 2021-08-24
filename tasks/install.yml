@@ -1,0 +1,77 @@
+---
+# Variable setup.
+- name: "Include OS-specific variables."
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Define openresty_user."
+  set_fact:
+    openresty_user: "{{ __openresty_user }}"
+  when: openresty_user is not defined
+
+- name: "Create log directory."
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 'o-rw'
+  with_items:
+    - /var/log/openresty
+
+# Setup/install tasks.
+- include_tasks: setup-Debian.yml
+  when: ansible_os_family == 'Debian'
+
+# Secure configuration.
+- import_tasks: secure.yml
+
+# Vhost configuration.
+- import_tasks: vhosts.yml
+
+# Configuration setup.
+- name: "Copy openresty configuration."
+  template:
+    src: "{{ openresty_conf_template }}"
+    dest: "{{ openresty_conf_file_path }}"
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0640
+  notify:
+    - reload openresty
+
+- name: "Ensure openresty service is running as configured."
+  service:
+    name: openresty
+    state: "{{ openresty_service_state }}"
+    enabled: "{{ openresty_service_enabled }}"
+
+- name: Add logrotate file
+  copy:
+    mode: 0644
+    dest: /etc/logrotate.d/openresty
+    content: |
+      /var/log/openresty/*.log {
+          #rotate the logfile(s) daily
+          daily
+          # If log file is missing, go on to next one without issuing an error msg
+          missingok
+          # Save logfiles for the last 10 days
+          rotate 14
+          # Old versions of log files are compressed with gzip
+          compress
+          # Postpone compression of the previous log file to the next rotation cycle
+          delaycompress
+          # Do not rotate the log if it is empty
+          notifempty
+          create 0640 www-data adm
+          sharedscripts
+          # adds extension like YYYYMMDD instead of simply adding a number
+          #dateext
+          #after logfile is rotated and nginx.pid exists, send the USR1 signal
+          postrotate
+              for inode in $(stat -c %i $1); do
+                  /bin/rm /var/spool/rsyslog/imfile-state:$inode 2>/dev/null || true
+              done
+              #[ ! -f /var/run/nginx.pid  ] || kill -USR1 `cat /var/run/nginx.pid`
+              service openresty reload >/dev/null 2>&1
+          endscript
+      }
+  changed_when: false

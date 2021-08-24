@@ -1,0 +1,81 @@
+user  {{ openresty_user }};
+
+error_log  {{ openresty_error_log }};
+pid        {{ openresty_pidfile }};
+
+{% block worker %}
+worker_processes  {{ openresty_worker_processes }};
+{% endblock %}
+
+{% if openresty_extra_conf_options %}
+{{ openresty_extra_conf_options }}
+{% endif %}
+
+{% block events %}
+events {
+    worker_connections  {{ openresty_worker_connections }};
+    multi_accept {{ openresty_multi_accept }};
+}
+{% endblock %}
+
+http {
+    {% block http_begin %}{% endblock %}
+
+{% block http_basic %}
+    include       {{ openresty_mime_file_path }};
+    default_type  application/octet-stream;
+
+    server_names_hash_bucket_size {{ openresty_server_names_hash_bucket_size }};
+
+    client_max_body_size {{ openresty_client_max_body_size }};
+
+    log_format  main  {{ openresty_log_format|indent(23) }};
+
+    access_log  {{ openresty_access_log }};
+
+    sendfile        {{ openresty_sendfile }};
+    tcp_nopush      {{ openresty_tcp_nopush }};
+    tcp_nodelay     {{ openresty_tcp_nodelay }};
+
+    keepalive_timeout  {{ openresty_keepalive_timeout }};
+    keepalive_requests {{ openresty_keepalive_requests }};
+
+    server_tokens {{ openresty_server_tokens }};
+{% if openresty_proxy_cache_path %}
+    proxy_cache_path {{ openresty_proxy_cache_path }};
+{% endif %}
+{% endblock %}
+
+{% block http_gzip %}
+    # gzip on;
+{% endblock %}
+
+{% if openresty_extra_http_options %}
+    {{ openresty_extra_http_options|indent(4, False) }}
+{% endif %}
+
+{% block http_upstream %}
+{% for upstream in openresty_upstreams %}
+    upstream {{ upstream.name }} {
+{% if upstream.strategy is defined %}
+        {{ upstream.strategy }};
+{% endif %}
+{% for server in upstream.servers %}
+        server {{ server }};
+{% endfor %}
+{% if upstream.keepalive is defined %}
+        keepalive {{ upstream.keepalive }};
+{% endif %}
+    }
+{% endfor %}
+{% endblock %}
+
+{% block http_includes %}
+    include {{ openresty_conf_path }}/*.conf;
+{% if openresty_conf_path != openresty_vhost_path %}
+    include {{ openresty_vhost_path }}/*;
+{% endif %}
+{% endblock %}
+
+    {% block http_end %}{% endblock %}
+}

@@ -1,0 +1,42 @@
+---
+- name: "Install requierement."
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - gnupg
+    - ca-certificates
+
+- name: "Import the openresty apt key."
+  apt_key:
+    url: https://openresty.org/package/pubkey.gpg
+    state: present
+
+- name: "Add openresty repository."
+  apt_repository:
+    repo: deb http://openresty.org/package/debian buster openresty
+    state: present
+
+    #- name: "Update apt cache."
+    #  apt: update_cache=yes cache_valid_time=86400
+    #  changed_when: false
+
+- name: "Ensure openresty is installed."
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ openresty_package_name }}"
+
+- name: "Get list of installed lua plugins."
+  command: opm list | awk '{print $1}'
+  register: openresty_plugins_list
+  changed_when: false
+
+- name: "Install extra lua plugins."
+  command: opm install {{ item }}
+  with_items:
+    - "{{ openresty_install_plugins }}"
+  when: "item not in openresty_plugins_list.stdout"
+  notify:
+    - restart openresty

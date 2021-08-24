@@ -1,0 +1,31 @@
+---
+- name: "Create conf.d directory."
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 'o-rw'
+  with_items:
+    - "{{ openresty_conf_path }}"
+
+- name: "Config should not be worldwide read or writeable."
+  file:
+    path: "/usr/local/openresty/nginx/conf"
+    mode: "o-rw"
+    owner: "root"
+    group: "root"
+    recurse: true
+
+- name: "Create additional configuration."
+  template:
+    src: "hardening.conf.j2"
+    dest: "{{ openresty_conf_path }}/90.hardening.conf"
+    owner: "root"
+    group: "root"
+    mode: 0640
+  notify: restart openresty
+
+- name: "Generate dh group."
+  command: "openssl dhparam -out /etc/openresty/dh{{ openresty_dh_size }}.pem {{ openresty_dh_size }}"
+  args:
+    creates: "/etc/openresty/dh{{ openresty_dh_size }}.pem"
+  notify: restart openresty

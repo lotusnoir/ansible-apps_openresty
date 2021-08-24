@@ -1,0 +1,9 @@
+---
+root_group: root
+openresty_conf_path: /usr/local/openresty/nginx/conf/conf.d
+openresty_conf_file_path: /usr/local/openresty/nginx/conf/nginx.conf
+openresty_mime_file_path: /usr/local/openresty/nginx/conf/mime.types
+openresty_pidfile: /usr/local/openresty/nginx/logs/nginx.pid
+openresty_vhost_path: /usr/local/openresty/nginx/conf/sites-enabled
+openresty_default_vhost_path: /usr/local/openresty/nginx/conf/sites-enabled/default
+__openresty_user: "www-data"

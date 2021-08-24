@@ -1,0 +1,13 @@
+---
+service:
+  openresty:
+    enabled: true
+    running: true
+process:
+  openrety:
+    running: true
+port:
+  tcp:443:
+    listening: true
+    ip:
+      - '0.0.0.0'
