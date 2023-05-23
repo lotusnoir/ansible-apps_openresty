@@ -1,18 +1,14 @@
 ---
-# Variable setup.
-- name: "Include OS-specific variables."
-  include_vars: "{{ ansible_os_family }}.yml"
-
 - name: "Define openresty_user."
-  set_fact:
+  ansible.builtin.set_fact:
     openresty_user: "{{ __openresty_user }}"
   when: openresty_user is not defined
 
 - name: "Create log directory."
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: 'o-rw'
+    mode: 0640
   with_items:
     - /var/log/openresty
 
@@ -28,7 +24,7 @@
 
 # Configuration setup.
 - name: "Copy openresty configuration."
-  template:
+  ansible.builtin.template:
     src: "{{ openresty_conf_template }}"
     dest: "{{ openresty_conf_file_path }}"
     owner: root
@@ -38,14 +34,14 @@
     - reload openresty
 
 - name: "Ensure openresty service is running as configured."
-  service:
+  ansible.builtin.service:
     name: openresty
     state: "{{ openresty_service_state }}"
     enabled: "{{ openresty_service_enabled }}"
 
 - name: Add logrotate file
-  copy:
-    mode: 0644
+  ansible.builtin.copy:
+    mode: 0640
     dest: /etc/logrotate.d/openresty
     content: |
       /var/log/openresty/*.log {
@@ -74,4 +70,3 @@
               service openresty reload >/dev/null 2>&1
           endscript
       }
-  changed_when: false

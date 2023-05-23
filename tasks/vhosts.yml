@@ -1,20 +1,20 @@
 ---
 - name: "Remove default openresty vhost config file (if configured)."
-  file:
+  ansible.builtin.file:
     path: "{{ openresty_default_vhost_path }}"
     state: absent
   when: openresty_remove_default_vhost | bool
   notify: restart openresty
 
 - name: "Ensure openresty_vhost_path exists."
-  file:
+  ansible.builtin.file:
     path: "{{ openresty_vhost_path }}"
     state: directory
     mode: 0640
   notify: reload openresty
 
 - name: "Add managed vhost config files."
-  template:
+  ansible.builtin.template:
     src: "{{ item.template|default(openresty_vhost_template) }}"
     dest: "{{ openresty_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
     force: true
@@ -26,7 +26,7 @@
   notify: reload openresty
 
 - name: "Remove managed vhost config files."
-  file:
+  ansible.builtin.file:
     path: "{{ openresty_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
     state: absent
   when: item.state|default('present') == 'absent'
