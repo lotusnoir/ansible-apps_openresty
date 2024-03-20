@@ -12,17 +12,16 @@
   with_items:
     - /var/log/openresty
 
-# Setup/install tasks.
-- include_tasks: setup-Debian.yml
+- name: Install tasks
+  ansible.builtin.include_tasks: setup-Debian.yml
   when: ansible_os_family == 'Debian'
 
-# Secure configuration.
-- import_tasks: secure.yml
+- name: Secure config
+  ansible.builtin.import_tasks: secure.yml
 
-# Vhost configuration.
-- import_tasks: vhosts.yml
+- name: Vhost config
+  ansible.builtin.import_tasks: vhosts.yml
 
-# Configuration setup.
 - name: "Copy openresty configuration."
   ansible.builtin.template:
     src: "{{ openresty_conf_template }}"
@@ -30,8 +29,7 @@
     owner: root
     group: "{{ root_group }}"
     mode: 0640
-  notify:
-    - reload openresty
+  notify: "Reload openresty"
 
 - name: "Ensure openresty service is running as configured."
   ansible.builtin.service:

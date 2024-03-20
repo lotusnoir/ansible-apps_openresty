@@ -14,7 +14,7 @@
     owner: "root"
     group: "root"
     mode: 0640
-  notify: restart openresty
+  notify: Restart openresty
 
 - name: "Config should not be worldwide read or writeable."
   ansible.builtin.file:
@@ -28,4 +28,4 @@
   ansible.builtin.command: "openssl dhparam -out /etc/openresty/dh{{ openresty_dh_size }}.pem {{ openresty_dh_size }}"
   args:
     creates: "/etc/openresty/dh{{ openresty_dh_size }}.pem"
-  notify: restart openresty
+  notify: Restart openresty

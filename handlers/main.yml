@@ -1,10 +1,14 @@
 ---
-- name: restart openresty
-  ansible.builtin.service: name=openresty state=restarted
+- name: Restart openresty
+  ansible.builtin.service:
+    name: openresty
+    state: restarted
 
-- name: validate openresty configuration
+- name: Validate openresty configuration
   ansible.builtin.command: openresty -t -c /usr/local/openresty/nginx/conf/nginx.conf
   changed_when: false
 
-- name: reload openresty
-  ansible.builtin.service: name=openresty state=reloaded
+- name: Reload openresty
+  ansible.builtin.service:
+    name: openresty
+    state: reloaded

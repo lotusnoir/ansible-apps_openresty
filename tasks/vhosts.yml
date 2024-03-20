@@ -4,31 +4,31 @@
     path: "{{ openresty_default_vhost_path }}"
     state: absent
   when: openresty_remove_default_vhost | bool
-  notify: restart openresty
+  notify: Restart openresty
 
 - name: "Ensure openresty_vhost_path exists."
   ansible.builtin.file:
     path: "{{ openresty_vhost_path }}"
     state: directory
     mode: 0640
-  notify: reload openresty
+  notify: Reload openresty
 
 - name: "Add managed vhost config files."
   ansible.builtin.template:
-    src: "{{ item.template|default(openresty_vhost_template) }}"
-    dest: "{{ openresty_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
+    src: "{{ item.template | default(openresty_vhost_template) }}"
+    dest: "{{ openresty_vhost_path }}/{{ item.filename | default(item.server_name.split(' ')[0] ~ '.conf') }}"
     force: true
     owner: root
     group: "{{ root_group }}"
     mode: 0640
   when: item.state|default('present') != 'absent'
   with_items: "{{ openresty_vhosts }}"
-  notify: reload openresty
+  notify: Reload openresty
 
 - name: "Remove managed vhost config files."
   ansible.builtin.file:
-    path: "{{ openresty_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
+    path: "{{ openresty_vhost_path }}/{{ item.filename | default(item.server_name.split(' ')[0] ~ '.conf') }}"
     state: absent
   when: item.state|default('present') == 'absent'
   with_items: "{{ openresty_vhosts }}"
-  notify: reload openresty
+  notify: Reload openresty
